@@ -113,7 +113,8 @@ struct error : public std::exception {
 namespace err_message_list {
 
 inline std::string init_error(const std::string &cobj) {
-    return "could not create " + cobj;
+    return "could not create ";
+    //  +cobj;
 }
 
 inline std::string execute_error(const std::string &cobj) {
@@ -149,7 +150,8 @@ inline std::string memory_creation() {
 
 inline std::string desc_query(
         const std::string &query, const std::string &desc) {
-    return "could not get " + query + " from " + desc + ".";
+    return "could not get ";
+    //  +query + " from " + desc + ".";
 }
 } // namespace err_message_list
 /// @endcond
