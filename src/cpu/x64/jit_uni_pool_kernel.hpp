@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2024 Intel Corporation
+* Copyright 2017-2025 Intel Corporation
 * Copyright 2018 YANDEX LLC
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -163,7 +163,11 @@ private:
     void pop_vmm_val(const int idx);
     void load(const int idx, const reg64_t &reg_ptr, const int offset,
             const bool is_c_tail_proccessing);
+    void load32(const int idx, const reg64_t &reg_ptr, const int offset,
+            const bool is_c_tail_proccessing);
     void store(const int idx, const reg64_t &reg_ptr, const int offset,
+            const bool is_c_tail_proccessing);
+    void store32(const int idx, const reg64_t &reg_ptr, const int offset,
             const bool is_c_tail_proccessing);
 
     void maybe_recalculate_divisor(int jj, int ur_w, int pad_l, int pad_r,
