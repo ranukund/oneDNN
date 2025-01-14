@@ -617,7 +617,7 @@ public:
     void *get_data_handle() const {
         void *handle = nullptr;
         error::wrap_c_api(dnnl_graph_tensor_get_data_handle(get(), &handle),
-                dnnl::err_message_list::desc_query("data handle", "tensor"));
+                "could not get data handle from tensor");
         return handle;
     }
 
@@ -626,8 +626,7 @@ public:
     /// @param handle Memory handle.
     void set_data_handle(void *handle) {
         error::wrap_c_api(dnnl_graph_tensor_set_data_handle(get(), handle),
-                dnnl::err_message_list::set_failure(
-                        "data handle to the tensor"));
+                "could not set data handle to the tensor");
     }
 
     /// Returns the associated engine.

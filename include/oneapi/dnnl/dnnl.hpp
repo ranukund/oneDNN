@@ -3445,7 +3445,7 @@ struct memory : public handle<dnnl_memory_t> {
     void *get_data_handle(int index = 0) const {
         void *handle;
         error::wrap_c_api(dnnl_memory_get_data_handle_v2(get(), &handle, index),
-                err_message_list::desc_query("native handle", "memory object"));
+                "could not get native handle from memory object");
         return handle;
     }
 
@@ -3458,8 +3458,7 @@ struct memory : public handle<dnnl_memory_t> {
     /// @param index Memory index to attach the buffer. Defaults to 0.
     void set_data_handle(void *handle, int index = 0) const {
         error::wrap_c_api(dnnl_memory_set_data_handle_v2(get(), handle, index),
-                err_message_list::set_failure(
-                        "native handle of a memory object"));
+                "could not set native handle of a memory object");
     }
 
     /// Maps a memory object and returns a host-side pointer to a memory
@@ -3517,7 +3516,7 @@ struct memory : public handle<dnnl_memory_t> {
     void *get_data_handle() const {
         void *handle;
         error::wrap_c_api(dnnl_memory_get_data_handle(get(), &handle),
-                err_message_list::desc_query("native handle", "memory object"));
+                "could not get native handle from memory object");
         return handle;
     }
 
@@ -3529,8 +3528,7 @@ struct memory : public handle<dnnl_memory_t> {
     ///     #dnnl::memory::desc::get_size() bytes allocated.
     void set_data_handle(void *handle) const {
         error::wrap_c_api(dnnl_memory_set_data_handle(get(), handle),
-                err_message_list::set_failure(
-                        "native handle of a memory object"));
+                "could not set native handle of a memory object");
     }
 
     /// Maps a memory object and returns a host-side pointer to a memory

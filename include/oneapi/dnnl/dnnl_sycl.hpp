@@ -163,11 +163,11 @@ sycl::buffer<T, ndims> get_buffer(const memory &amemory) {
     dnnl_sycl_interop_memory_kind_t ckind;
     error::wrap_c_api(
             dnnl_sycl_interop_memory_get_memory_kind(amemory.get(), &ckind),
-            err_message_list::get_failure("SYCL buffer object"));
+            "could not get SYCL buffer object");
 
     void *handle_ptr;
     error::wrap_c_api(dnnl_memory_get_data_handle(amemory.get(), &handle_ptr),
-            err_message_list::get_failure("SYCL buffer object"));
+            "could not get SYCL buffer object");
 
     // XXX: workaround: zero-range buffer cannot be constructed.
     if (!handle_ptr) return sycl::buffer<T, ndims>(sycl::range<1>(1));
