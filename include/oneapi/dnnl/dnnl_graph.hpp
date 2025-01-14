@@ -403,8 +403,7 @@ public:
                 dnnl_graph_logical_tensor_init_with_strides(&val, tid,
                         convert_to_c(dtype), static_cast<int32_t>(adims.size()),
                         adims.data(), strides.data(), convert_to_c(ptype)),
-                dnnl::err_message_list::init_error(
-                        "logical_tensor with strides and property"));
+                "could not create a logical_tensor with strides and property");
         data = val;
     }
 
@@ -521,8 +520,7 @@ public:
     size_t get_mem_size() const {
         size_t size = 0;
         error::wrap_c_api(dnnl_graph_logical_tensor_get_mem_size(&data, &size),
-                dnnl::err_message_list::desc_query(
-                        "memory size", "logical_tensor"));
+                "could not get memory size from logical_tensor");
         return size;
     }
 
@@ -596,9 +594,8 @@ public:
         dnnl_graph_tensor_t t = nullptr;
         error::wrap_c_api(
                 dnnl_graph_tensor_create(&t, &(lt.data), aengine.get(), handle),
-                dnnl::err_message_list::init_error(
-                        "tensor object with the logical_tensor, "
-                        "engine, and handle"));
+                "could not create tensor object with the logical_tensor, "
+                "engine, and handle");
         reset(t);
     }
 
@@ -635,7 +632,7 @@ public:
     engine get_engine() const {
         dnnl_engine_t c_engine = nullptr;
         error::wrap_c_api(dnnl_graph_tensor_get_engine(get(), &c_engine),
-                dnnl::err_message_list::desc_query("engine", "tensor object"));
+                "could not get engine from tensor object");
         return engine(c_engine, true);
     }
 
@@ -645,8 +642,7 @@ public:
     logical_tensor get_logical_tensor() const {
         dnnl_graph_logical_tensor_t lt;
         error::wrap_c_api(dnnl_graph_tensor_get_logical_tensor(get(), &lt),
-                dnnl::err_message_list::desc_query(
-                        "logical tensor", "tensor object"));
+                "could not get logical tensor from tensor object");
         return logical_tensor(lt);
     }
 };
@@ -703,8 +699,7 @@ public:
 
         error::wrap_c_api(dnnl_graph_compiled_partition_get_inplace_ports(
                                   get(), &num, &inplace_pairs),
-                dnnl::err_message_list::desc_query(
-                        "in-place pairs", "compiled partition"));
+                "could not get in-place pairs from compiled partition");
         if (num == 0) return {};
 
         std::vector<std::pair<size_t, size_t>> inplace_options;
@@ -1216,8 +1211,7 @@ public:
     size_t get_ops_num() const {
         size_t num {0};
         error::wrap_c_api(dnnl_graph_partition_get_op_num(get(), &num),
-                dnnl::err_message_list::desc_query(
-                        "number of ops", "partition"));
+                "could not get number of ops from partition");
         return num;
     }
 
@@ -1229,7 +1223,7 @@ public:
         std::vector<size_t> ops(num);
 
         error::wrap_c_api(dnnl_graph_partition_get_ops(get(), num, ops.data()),
-                dnnl::err_message_list::desc_query("op ids", "partition"));
+                "could not get op ids from partition");
         return ops;
     }
 
@@ -1240,7 +1234,7 @@ public:
     size_t get_id() const {
         size_t id {};
         error::wrap_c_api(dnnl_graph_partition_get_id(get(), &id),
-                dnnl::err_message_list::get_failure("id of the partition"));
+                "could not get id of the partition");
         return id;
     }
 
@@ -1278,8 +1272,7 @@ public:
     bool is_supported() const {
         uint8_t supported {0};
         error::wrap_c_api(dnnl_graph_partition_is_supported(get(), &supported),
-                dnnl::err_message_list::get_failure(
-                        "supporting status of the partition"));
+                "could not get supporting status of the partition");
         return supported != 0;
     }
 
@@ -1289,15 +1282,13 @@ public:
     std::vector<logical_tensor> get_input_ports() const {
         size_t num = 0;
         error::wrap_c_api(dnnl_graph_partition_get_input_ports_num(get(), &num),
-                dnnl::err_message_list::get_failure(
-                        "number of inputs of the partition"));
+                "could not get number of inputs of the partition");
         if (num == 0) return {};
 
         std::vector<dnnl_graph_logical_tensor_t> c_inputs(num);
         error::wrap_c_api(dnnl_graph_partition_get_input_ports(
                                   get(), num, c_inputs.data()),
-                dnnl::err_message_list::get_failure(
-                        "input logical tensors of the partition"));
+                "could not get input logical tensors of the partition");
 
         std::vector<logical_tensor> inputs;
         inputs.reserve(num);
@@ -1313,15 +1304,13 @@ public:
         size_t num = 0;
         error::wrap_c_api(
                 dnnl_graph_partition_get_output_ports_num(get(), &num),
-                dnnl::err_message_list::get_failure(
-                        "number of outputs of the partition"));
+                "could not get number of outputs of the partition");
         if (num == 0) return {};
 
         std::vector<dnnl_graph_logical_tensor_t> c_outputs(num);
         error::wrap_c_api(dnnl_graph_partition_get_output_ports(
                                   get(), num, c_outputs.data()),
-                dnnl::err_message_list::get_failure(
-                        "output logical tensors of the partition"));
+                "could not get output logical tensors of the partition");
 
         std::vector<logical_tensor> outputs;
         outputs.reserve(num);
@@ -1336,7 +1325,7 @@ public:
     engine::kind get_engine_kind() const {
         dnnl_engine_kind_t akind;
         error::wrap_c_api(dnnl_graph_partition_get_engine_kind(get(), &akind),
-                dnnl::err_message_list::desc_query("engine kind", "partition"));
+                "could not get engine kind from partition");
 
         return static_cast<engine::kind>(akind);
     }
@@ -1360,7 +1349,7 @@ private:
         dnnl_graph_compiled_partition_t cpartitions = nullptr;
         error::wrap_c_api(
                 dnnl_graph_compiled_partition_create(&cpartitions, get()),
-                dnnl::err_message_list::init_error("compiled_partition"));
+                "could not create compiled_partition");
         error::wrap_c_api(dnnl_graph_partition_compile(get(), cpartitions,
                                   c_inputs.size(), c_inputs.data(),
                                   c_outputs.size(), c_outputs.data(), e.get()),
@@ -1510,8 +1499,7 @@ public:
 
         size_t num = 0;
         error::wrap_c_api(dnnl_graph_graph_get_partition_num(get(), &num),
-                dnnl::err_message_list::desc_query(
-                        "number of partitions", "graph"));
+                "could not get number of partitions from graph");
 
         // return early if there is no partitions in the graph.
         if (num == 0) return {};
@@ -1522,7 +1510,7 @@ public:
         std::vector<dnnl_graph_partition_t> partitions(num);
         error::wrap_c_api(
                 dnnl_graph_graph_get_partitions(get(), num, partitions.data()),
-                dnnl::err_message_list::desc_query("partitions", "graph"));
+                "could not get partitions from graph");
 
         for (auto p : partitions) {
             out_list.emplace_back(p);
