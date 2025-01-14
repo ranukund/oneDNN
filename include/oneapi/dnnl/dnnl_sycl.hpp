@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2020-2024 Intel Corporation
+* Copyright 2020-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -367,7 +367,7 @@ inline sycl::event execute(const dnnl::primitive &aprimitive,
     error::wrap_c_api(
             dnnl_sycl_interop_primitive_execute(aprimitive.get(), astream.get(),
                     (int)c_args.size(), c_args.data(), &deps, &return_event),
-            err_message_list::execute_error("primitive"));
+            "could not execute primitive");
     return return_event;
 }
 

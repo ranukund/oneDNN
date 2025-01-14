@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2016-2024 Intel Corporation
+* Copyright 2016-2025 Intel Corporation
 * Copyright 2024 FUJITSU LIMITED
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3425,7 +3425,7 @@ struct memory : public handle<dnnl_memory_t> {
                         "memory descriptor", "memory object"));
         dnnl_memory_desc_t cloned_md = nullptr;
         error::wrap_c_api(dnnl_memory_desc_clone(&cloned_md, cdesc),
-                err_message_list::clone_error("memory descriptor"));
+                "could not clone memory descriptor");
         return desc(cloned_md);
     }
 
@@ -3884,7 +3884,7 @@ struct post_ops : public handle<dnnl_post_ops_t> {
         aalgorithm = static_cast<dnnl::algorithm>(c_alg);
         dnnl_memory_desc_t cloned_md = nullptr;
         error::wrap_c_api(dnnl_memory_desc_clone(&cloned_md, cdesc),
-                err_message_list::clone_error("memory descriptor"));
+                "could not clone memory descriptor");
         src1_desc = memory::desc(cloned_md);
     }
 
@@ -3997,7 +3997,7 @@ struct primitive_attr : public handle<dnnl_primitive_attr_t> {
                         "parameters of a dropout attribute"));
         dnnl_memory_desc_t cloned_md = nullptr;
         error::wrap_c_api(dnnl_memory_desc_clone(&cloned_md, cdesc),
-                err_message_list::clone_error("memory descriptor"));
+                "could not clone memory descriptor");
         mask_desc = memory::desc(cloned_md);
     }
 
@@ -4228,7 +4228,7 @@ struct primitive_attr : public handle<dnnl_primitive_attr_t> {
                 err_message_list::get_failure("post-ops primitive attribute"));
         dnnl_post_ops_t c_post_ops;
         error::wrap_c_api(dnnl_post_ops_clone(&c_post_ops, const_c_post_ops),
-                err_message_list::clone_error("post-ops primitive attribute"));
+                "could not clone post-ops primitive attribute");
         return post_ops(c_post_ops);
     }
 
@@ -4681,7 +4681,7 @@ struct primitive_desc_base : public handle<dnnl_primitive_desc_t> {
 
         dnnl_memory_desc_t cloned_md = nullptr;
         error::wrap_c_api(dnnl_memory_desc_clone(&cloned_md, cdesc),
-                err_message_list::clone_error("memory descriptor"));
+                "could not clone memory descriptor");
 
         return memory::desc(cloned_md);
     }
@@ -4817,7 +4817,7 @@ struct primitive_desc_base : public handle<dnnl_primitive_desc_t> {
                         "attributes", "primitive descriptor"));
         dnnl_primitive_attr_t c_attr;
         error::wrap_c_api(dnnl_primitive_attr_clone(&c_attr, const_c_attr),
-                err_message_list::clone_error("primitive attributes"));
+                "could not clone primitive attributes");
         return primitive_attr(c_attr);
     }
 
@@ -4926,7 +4926,7 @@ protected:
     void reset_with_clone(const_dnnl_primitive_desc_t pd) {
         dnnl_primitive_desc_t new_pd;
         error::wrap_c_api(dnnl_primitive_desc_clone(&new_pd, pd),
-                err_message_list::clone_error("primitive descriptor"));
+                "could not clone primitive descriptor");
         reset(new_pd);
     }
 
@@ -13991,7 +13991,7 @@ inline void primitive::execute(const stream &astream,
 
     error::wrap_c_api(dnnl_primitive_execute(get(), astream.get(),
                               (int)c_args.size(), c_args.data()),
-            err_message_list::execute_error("primitive"));
+            "could not execute primitive");
 }
 
 /// @endcond

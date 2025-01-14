@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2024 Intel Corporation
+* Copyright 2024-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -354,8 +354,8 @@ struct brgemm : public handle<dnnl_brgemm_t> {
         dnnl_status_t status = dnnl_brgemm_execute(get(), A, B,
                 (const dnnl_dim_t *)A_B_offsets.data(), C, scratchpad);
         if (status != dnnl_success)
-            error::wrap_c_api(status,
-                    err_message_list::execute_error("BRGeMM ukernel object"));
+            error::wrap_c_api(
+                    status, "could not execute BRGeMM ukernel object");
     }
 
     /// Executes a BRGeMM ukernel object with post operations.
@@ -380,8 +380,8 @@ struct brgemm : public handle<dnnl_brgemm_t> {
                 (const dnnl_dim_t *)A_B_offsets.data(), C, D, scratchpad,
                 params.get());
         if (status != dnnl_success)
-            error::wrap_c_api(status,
-                    err_message_list::execute_error("BRGeMM ukernel object"));
+            error::wrap_c_api(
+                    status, "could not execute BRGeMM ukernel object");
     }
 
     /// Returns a constant reference to a static instance of default constructed
@@ -456,8 +456,7 @@ struct transform : public handle<dnnl_transform_t> {
         dnnl_status_t status = dnnl_transform_execute(get(), in, out);
         if (status != dnnl_success)
             error::wrap_c_api(status,
-                    err_message_list::execute_error(
-                            "BRGeMM ukernel packing B object"));
+                    "could not execute BRGeMM ukernel packing B object");
     }
 };
 

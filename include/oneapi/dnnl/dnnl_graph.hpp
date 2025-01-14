@@ -740,7 +740,7 @@ public:
                 dnnl_graph_compiled_partition_execute(get(), astream.get(),
                         c_inputs.size(), c_inputs.data(), c_outputs.size(),
                         c_outputs.data()),
-                dnnl::err_message_list::execute_error("compiled_partition"));
+                "could not execute compiled_partition");
     }
 };
 

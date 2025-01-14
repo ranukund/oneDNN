@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2024 Intel Corporation
+* Copyright 2024-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -135,9 +135,8 @@ inline cl_event execute(compiled_partition &c_partition, stream &astream,
                     astream.get(), c_inputs.size(), c_inputs.data(),
                     c_outputs.size(), c_outputs.data(), c_deps,
                     (int)deps.size(), &ocl_event),
-            err_message_list::execute_error(
-                    "compiled_partition on a specified opencl "
-                    "stream"));
+            "could not execute compiled_partition on a specified opencl "
+            "stream");
     return ocl_event;
 }
 
