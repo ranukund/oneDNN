@@ -18,11 +18,7 @@
 #ifndef CPU_X64_JIT_UNI_POOL_KERNEL_HPP
 #define CPU_X64_JIT_UNI_POOL_KERNEL_HPP
 
-#include <cfloat>
-#include <functional>
 #include <memory>
-
-#include "common/memory_tracking.hpp"
 
 #include "cpu/x64/injectors/jit_uni_postops_injector.hpp"
 #include "cpu/x64/jit_generator.hpp"
@@ -32,6 +28,13 @@ namespace dnnl {
 namespace impl {
 namespace cpu {
 namespace x64 {
+
+namespace jit_uni_pooling_utils {
+inline bcast_set_t get_supported_bcast_strategies() {
+    return {broadcasting_strategy_t::scalar, broadcasting_strategy_t::per_oc,
+            broadcasting_strategy_t::no_broadcast};
+}
+} // namespace jit_uni_pooling_utils
 
 struct bf16_emulation_t;
 
@@ -44,10 +47,6 @@ struct jit_uni_pool_kernel : public jit_generator {
     ~jit_uni_pool_kernel();
 
     DECLARE_CPU_JIT_AUX_FUNCTIONS(jit_uni_pool_kernel)
-
-    static status_t init_conf(jit_pool_conf_t &jbp,
-            memory_tracking::registrar_t &scratchpad, primitive_attr_t &attr,
-            const pooling_pd_t *ppd);
 
 private:
     using Xmm = Xbyak::Xmm;
@@ -256,9 +255,6 @@ private:
 
     void apply_postops(int ur_bc, int ur_w, int c_block,
             const std::function<bool(int, bool)> &is_tail_predicate);
-
-    static bool post_ops_ok(jit_pool_conf_t &jpp, const primitive_attr_t &attr,
-            const memory_desc_wrapper &dst_d);
 
     inline bool use_bf16_emulation() const {
         return jpp.is_bf16 && !isa_has_bf16(jpp.isa) && isa != avx2_vnni_2;
