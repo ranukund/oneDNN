@@ -199,7 +199,8 @@ static status_t init_conf(cpu_isa_t isa, jit_pool_conf_t &jpp,
         jpp.is_bf16 = false;
         jpp.is_f16 = false;
         jpp.is_fp8 = false;
-        jpp.dt_size = types::data_type_size(data_type::f32);
+        jpp.src_dt = jpp.dst_dt = data_type::f32;
+        jpp.dt_size = types::data_type_size(jpp.src_dt);
         jpp.tag_kind = jit_memory_tag_kind_t::ncsp;
 
         // used to initialize binary post-ops
