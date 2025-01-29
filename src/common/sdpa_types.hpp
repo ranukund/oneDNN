@@ -28,11 +28,6 @@
 namespace dnnl {
 namespace impl {
 
-#define DNNL_ARG_QUERIES DNNL_ARG_SRC_0
-#define DNNL_ARG_KEYS DNNL_ARG_SRC_1
-#define DNNL_ARG_VALUES DNNL_ARG_SRC_2
-#define DNNL_ARG_ATTN_MASK DNNL_ARG_SHIFT
-
 // A descriptor for a scaled dot product attention (SDPA) operation.
 struct sdpa_desc_t : public op_desc_t {
     sdpa_desc_t() : op_desc_t(primitive_kind::sdpa) {}
@@ -63,6 +58,10 @@ struct sdpa_desc_t : public op_desc_t {
     // causal_mask = false: use mask descriptor
     // causal_mask = true: causal mask used. mask descriptor not used
     bool causal_mask {};
+
+    memory_desc_t idx_desc; /* indices for paged attention */
+    dim_t page_size; /* number of tokens in each page */
+    bool utilize_idx;
 
     // Number of queries.
     dnnl_dim_t queries() const { return q_desc.dims[q_desc.ndims - 2]; }

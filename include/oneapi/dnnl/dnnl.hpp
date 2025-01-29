@@ -7620,6 +7620,28 @@ struct eltwise_backward : public primitive {
         : primitive(pd, cache_blob) {}
 };
 
+struct sdpa_micro : public primitive {
+    struct primitive_desc : public dnnl::primitive_desc {
+        primitive_desc() = default;
+        primitive_desc(const engine &aengine, const memory::desc &qry_desc,
+                const memory::desc &key_desc, const memory::desc &val_desc,
+                const memory::desc &dst_desc, const memory::desc &msk_desc,
+                const memory::desc &idx_desc) {
+            dnnl_primitive_desc_t pd = nullptr;
+            dnnl_status_t status
+                    = dnnl_micro_sdpa_primitive_desc_create(&pd, aengine.get(),
+                            qry_desc.get(), key_desc.get(), val_desc.get(),
+                            dst_desc.get(), msk_desc.get(), idx_desc.get());
+
+            error::wrap_c_api(status, "could not create sdpa primitive descriptor");
+
+            reset(pd);
+        }
+    };
+
+    sdpa_micro(const primitive_desc &pd) : primitive(pd) {}
+};
+
 /// @} dnnl_api_eltwise
 
 /// @addtogroup dnnl_api_softmax Softmax
