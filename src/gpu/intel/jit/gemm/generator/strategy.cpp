@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2024 Intel Corporation
+* Copyright 2019-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ bool GEMMStrategy::needsUnnamedBarrier(const GEMMProblem &problem) const
     if (needsKLoopBarrier() && (!namedBarriers[LoopM] || !namedBarriers[LoopN]))
         return true;
     if (slmBuffers > 0) {
-        if (persistent) return true;
+        if (persistentLoop()) return true;
         if (problem.needsASums() || problem.needsBSums()) return true;
     }
     if (kParallelLocal) return true;
