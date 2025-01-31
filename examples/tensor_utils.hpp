@@ -115,7 +115,6 @@ tensor eye(const memory::dims &dims) {
         }
     }
     return cast(tensor(vec, dims), dt::f16);
-
 }
 
 tensor rand(const memory::dims &dims) {
@@ -131,14 +130,14 @@ tensor rand(const memory::dims &dims) {
                             + k * dims[3] + l]
                             = dis(gen);
 
-    return cast(tensor(vec, dims), dt::f32);
+    return cast(tensor(vec, dims), dt::f16);
 }
 
 tensor zeros(const memory::dims &dims) {
     std::vector<float> vec;
     int dim0 = dims[0], dim1 = dims[1], rows = dims[2], cols = dims[3];
     vec.resize(dim0 * dim1 * rows * cols, 0.0f);
-    return cast(tensor(vec, dims), dt::f32);
+    return cast(tensor(vec, dims), dt::f16);
 }
 
 const std::string dt2str(memory::data_type dtype) {
@@ -200,7 +199,7 @@ void write(const tensor &t, const std::string &file_path) {
 }
 
 std::vector<float> transpose(
-        const std::vector<float> &data, const std::vector<int> &dims) {
+        const std::vector<float> &data, const std::vector<long int> &dims) {
     int A = dims[0], B = dims[1], C = dims[2], D = dims[3];
     std::vector<float> transposed(data.size());
     for (int a = 0; a < A; ++a) {
@@ -210,13 +209,23 @@ std::vector<float> transpose(
                     int row_major_index
                             = a * (B * C * D) + b * (C * D) + c * D + d;
                     int col_major_index
-                            = a * (B * D * C) + b * (D * C) + d * C + c;
+                            = d * (A * B * C) + c * (A * B) + b * A + a;
+
                     transposed[col_major_index] = data[row_major_index];
                 }
             }
         }
     }
     return transposed;
+}
+
+tensor transpose(const tensor &t) {
+    memory::data_type dt = t.md_.get_data_type();
+    std::vector<float> vec = tensor2vec<float>(t);
+    std::vector<long int> dims = t.md_.get_dims();
+    std::vector<float> transposed = transpose(vec, dims);
+    memory::dims memory_dims(dims.begin(), dims.end()); // TODO flip dims
+    return cast(tensor(transposed, memory_dims), dt);
 }
 
 tensor read(const std::string &file_path) {
@@ -227,7 +236,7 @@ tensor read(const std::string &file_path) {
     std::getline(file, line);
     std::istringstream line_stream(line);
 
-    std::vector<int> dims;
+    std::vector<long int> dims;
     int dim;
     while (line_stream >> dim) {
         dims.push_back(dim);

@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <random>
 #include <regex>
 #include <set>
@@ -85,36 +86,77 @@ tensor execute_sdpa_prim(sdpa_micro sdpa_prim, tensor Q, tensor Kt, tensor V,
     return A;
 }
 
-sdpa_micro init_sdpa_primitive(tensor Q, tensor Kt, tensor V, tensor A,
-        tensor idx = tensor()) {
+sdpa_micro init_sdpa_primitive(
+        tensor Q, tensor Kt, tensor V, tensor A, tensor idx = tensor()) {
     auto sdpa_pd = sdpa_micro::primitive_desc(
             global_engine, Q.md_, Kt.md_, V.md_, A.md_, tensor().md_, idx.md_);
     auto sdpa_prim = sdpa_micro(sdpa_pd);
     return sdpa_prim;
 }
 
+int sum(const std::vector<int> &input) {
+    return std::accumulate(input.begin(), input.end(), 0);
+}
+
+int max(const std::vector<int> &input) {
+    return *std::max_element(input.begin(), input.end());
+}
+
 int main(int argc, char **argv) {
     global_engine = dnnl::engine(dnnl::engine::kind::gpu, 0);
     global_engine_stream = dnnl::stream(global_engine);
 
-    const int cached_pages = 3, num_pages = 2;
-    const int num_queries = 32, head_size = 32, page_size = 32;
+    // tensor subsequence_begins(
+    //         {0, 35, 47}, {1, 1, 1, batch_size_in_sequences + 1});
+    // tensor block_indices({0, 2, 3}, {1, 1, 1, batch_size_in_sequences + 1});
+    // tensor indexes({0, 25, 1}, {1, 1, 1, batch_size_in_sequences + 1});
 
-    // clang-format off
-    //                  [total_num_queries, num_heads * head_size]
-    tensor Q =   eye({           1, 1, num_queries,   head_size});
-    // tensor Kt =  eye({cached_pages, 1,   head_size,   page_size});
-    // tensor V =   eye({cached_pages, 1,   head_size,   page_size});
-    // tensor A = zeros({   num_pages, 1,   head_size, num_queries});
+    // const std::vector<int> prompt_lens = {16};
+    // const int batch_size_in_sequences = prompt_lens.size();
+    // const int batch_size_in_tokens = ::sum(prompt_lens);
+    // const int num_blocks = 10;
 
-    // tensor page_idxs = tensor({0, 0}, {1, 1, 1, num_pages});
-    // page_idxs = cast(page_idxs, dt::s32);
-    // // tensor block_indices_begins;
-    // // tensor indexes;
-    // // clang-format on
+    // const int num_kv_heads = 1;
 
-    // auto paged_prim = init_sdpa_primitive(Q, Kt, V, A, page_idxs);
-    // tensor paged_values = execute_sdpa_prim(paged_prim, Q, Kt, V, A, page_idxs);
+    // tensor query = eye({1, 1, batch_size_in_tokens, num_kv_heads * head_size});
+    // tensor key_cache   = eye({num_blocks, num_kv_heads, head_size, page_size});
+    // tensor value_cache = eye({num_blocks, num_kv_heads, head_size, page_size});
+    // tensor output = eye({});
 
-    // show(A);
+    // batch_size_in_tokens
+
+    /*
+      block_indices[num_blocks] (page numbers)
+      block_indices_begins[batch_size_in_sequences + 1] ()
+     */
+
+    // {batch = 1, m = 32, n = 32, k = 16}
+
+    // /* make sure render is correct */
+    // std::vector<float> data(32 * 16);
+    // for (int i = 0; i < data.size(); i++) {
+    //   int row = i % 32, col = i / 32;
+    //   if (row == col) {
+    //     data[i] = 1;
+    //     data[i + 16] = 1;
+    //   }
+    // }
+    // show(tensor(data, {1, 1, 32, 16}));
+    // exit(0);
+
+    // tensor Q = eye({1, 1, 16, 16});
+    // tensor Kt = eye({1, 1, 16, 32});
+    // tensor V = eye({1, 1, 32, 16});
+    // tensor A = zeros({1, 1, 16, 16});
+
+    tensor Q = eye({1, 1, 32, 32});  // (D) head size 32, (Q) num_queries 32
+    tensor Kt = eye({1, 1, 32, 64});  // (K) keys 64
+    show(Kt);
+    exit(0);
+    tensor V = eye({1, 1, 64, 32});
+    tensor A = zeros({1, 1, 32, 32});
+
+    auto paged_prim = init_sdpa_primitive(Q, Kt, V, A);
+    tensor paged_values = execute_sdpa_prim(paged_prim, Q, Kt, V, A);
+    show(A);
 }
