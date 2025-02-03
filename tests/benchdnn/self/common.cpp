@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2024 Intel Corporation
+* Copyright 2017-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -344,6 +344,9 @@ void append_binary(attr_t::post_ops_t &po, pk_t akind, dnnl_data_type_t src_dt1,
     attr_t::post_ops_t::entry_t e(akind);
     e.binary.alg = attr_t::post_ops_t::kind2dnnl_kind(akind);
     e.binary.src1_dt = src_dt1;
+
+    if (e.is_binary_kind_with_ternary_op()) e.binary.src2_dt = dnnl_s8;
+
     e.binary.mask_input = mask_input;
     e.binary.mask = mask;
     e.binary.policy = policy;
