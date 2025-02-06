@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2024 Intel Corporation
+# Copyright 2024-2025 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,4 +72,9 @@ include_directories_with_host_compiler_before(${OBJ_LIB} ${CMAKE_CURRENT_SOURCE_
 if(CMAKE_COMPILER_IS_GNUCC)
     set_source_files_properties(generator/pieces/loop_sequencer.cpp PROPERTIES COMPILE_FLAGS -fno-lto)
     set_source_files_properties(generator/generator.cpp PROPERTIES COMPILE_FLAGS -fno-lto)
+endif()
+
+# Enable dumping copy_plan code during generation.
+if(DNNL_DEV_MODE)
+    add_definitions_with_host_compiler(-DNGEN_ASM)
 endif()
