@@ -100,6 +100,12 @@ std::vector<ty> tensor2vec(tensor in) {
     return out;
 }
 
+tensor reshape(tensor in, const memory::dims dims) {
+    auto mem = tensor2vec<float>(in);
+    tensor out = tensor(mem, dims);
+    return out;
+}
+
 tensor eye(const memory::dims &dims) {
     std::vector<float> vec;
     int dim0 = dims[0], dim1 = dims[1], rows = dims[2], cols = dims[3];
@@ -108,7 +114,7 @@ tensor eye(const memory::dims &dims) {
     for (int i = 0; i < dim0; ++i) {
         for (int j = 0; j < dim1; ++j) {
             for (int k = 0; k < square_size; ++k) {
-                int index = i * dim1 * rows * cols + j * rows * cols + k * rows
+                int index = i * dim1 * rows * cols + j * rows * cols + k * cols
                         + k;
                 vec[index] = 1.0f;
             }
@@ -149,15 +155,19 @@ const std::string dt2str(memory::data_type dtype) {
     }
 }
 
-void render(const tensor &t, std::ostream &out) {
+void render(const tensor &t, std::ostream &out, const bool terse) {
     std::vector<float> vec = tensor2vec<float>(t);
     auto dims = t.md_.get_dims();
-    for (auto d : dims)
-        out << d << " ";
-    out << "[" << dt2str(t.md_.get_data_type()) << "]\n";
+
+    if (!terse) {
+        for (auto d : dims)
+            out << d << " ";
+        out << "[" << dt2str(t.md_.get_data_type()) << "]\n";
+    }
+
     while (dims.size() < 4)
         dims.insert(dims.begin(), 1);
-    int dim0 = dims[0], dim1 = dims[1], rows = dims[2], cols = dims[3];
+    int dim0 = dims[0], dim1 = dims[1], cols = dims[2], rows = dims[3];
 
     std::map<float, int> value_map;
     std::vector<float> unique_values(vec.begin(), vec.end());
@@ -167,10 +177,12 @@ void render(const tensor &t, std::ostream &out) {
     for (int i = 0; i < (int)unique_values.size(); ++i)
         value_map[unique_values[i]] = i;
 
-    out << "Legend:\n";
-    for (const auto &it : value_map)
-        out << std::setw(3) << it.second << ": " << it.first << "\n";
-    out << "\n";
+    if (!terse) {
+        out << "Legend:\n";
+        for (const auto &it : value_map)
+            out << std::setw(3) << it.second << ": " << it.first << "\n";
+        out << "\n";
+    }
 
     for (int i = 0; i < dim0; ++i) {
         for (int j = 0; j < dim1; ++j) {
@@ -188,30 +200,29 @@ void render(const tensor &t, std::ostream &out) {
     }
 }
 
-void show(const tensor &t) {
-    render(t, std::cout);
+void show(const tensor &t, const bool terse = false) {
+    render(t, std::cout, terse);
 }
 
 void write(const tensor &t, const std::string &file_path) {
     std::ofstream file(file_path);
     if (!file) throw std::runtime_error("Could not open file: " + file_path);
-    render(t, file);
+    render(t, file, false);
 }
 
-std::vector<float> transpose(
+std::vector<float> transpose_vector(
         const std::vector<float> &data, const std::vector<long int> &dims) {
-    int A = dims[0], B = dims[1], C = dims[2], D = dims[3];
+    const int A = dims[0], B = dims[1], rows = dims[2], cols = dims[3];
     std::vector<float> transposed(data.size());
     for (int a = 0; a < A; ++a) {
         for (int b = 0; b < B; ++b) {
-            for (int c = 0; c < C; ++c) {
-                for (int d = 0; d < D; ++d) {
-                    int row_major_index
-                            = a * (B * C * D) + b * (C * D) + c * D + d;
-                    int col_major_index
-                            = d * (A * B * C) + c * (A * B) + b * A + a;
-
-                    transposed[col_major_index] = data[row_major_index];
+            for (int col = 0; col < cols; ++col) {
+                for (int row = 0; row < rows; ++row) {
+                    int src_index = a * (B * rows * cols) + b * (rows * cols)
+                            + col * rows + row;
+                    int dst_index = a * (B * rows * cols) + b * (rows * cols)
+                            + row * cols + col;
+                    transposed[dst_index] = data[src_index];
                 }
             }
         }
@@ -219,13 +230,24 @@ std::vector<float> transpose(
     return transposed;
 }
 
+tensor transpose_backing(tensor &t) {
+    auto vec = tensor2vec<float>(t);
+    std::vector<long int> dims = t.md_.get_dims();
+    memory::data_type dt = t.md_.get_data_type();
+    auto transposed_vec = transpose_vector(vec, dims);
+    return cast(tensor(transposed_vec, dims), dt);
+}
+
 tensor transpose(const tensor &t) {
     memory::data_type dt = t.md_.get_data_type();
-    std::vector<float> vec = tensor2vec<float>(t);
+    std::vector<float> mem = tensor2vec<float>(t);
     std::vector<long int> dims = t.md_.get_dims();
-    std::vector<float> transposed = transpose(vec, dims);
-    memory::dims memory_dims(dims.begin(), dims.end()); // TODO flip dims
-    return cast(tensor(transposed, memory_dims), dt);
+
+    std::vector<float> transposed_mem = transpose_vector(mem, dims);
+    std::vector<long int> transposed_dims({dims[0], dims[1], dims[3], dims[2]});
+
+    memory::dims memory_dims(transposed_dims.begin(), transposed_dims.end());
+    return cast(tensor(transposed_mem, memory_dims), dt);
 }
 
 tensor read(const std::string &file_path) {
@@ -279,10 +301,10 @@ tensor read(const std::string &file_path) {
             data.push_back(key_to_value[key]);
         }
     }
-    data = transpose(data, dims);
+    std::vector<float> transposed_data = transpose_vector(data, dims);
 
     memory::dims memory_dims(dims.begin(), dims.end());
-    tensor read_tensor(data, memory_dims);
+    tensor read_tensor(transposed_data, memory_dims);
     return cast(read_tensor, dtype);
 }
 
