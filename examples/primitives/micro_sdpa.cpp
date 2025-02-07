@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
         const int num_kv_heads = 1;
 
-        tensor query = eye({1, 1, batch_size_in_tokens, num_kv_heads * head_size});
+        tensor query       = eye({1, 1, batch_size_in_tokens, num_kv_heads * head_size});
         tensor key_cache   = eye({num_blocks, num_kv_heads, head_size, page_size});
         tensor value_cache = eye({num_blocks, num_kv_heads, head_size, page_size});
      */
