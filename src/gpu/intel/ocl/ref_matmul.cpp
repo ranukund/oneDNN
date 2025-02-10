@@ -312,7 +312,7 @@ status_t ref_matmul_t::execute_ref(const exec_ctx_t &ctx) const {
 
     ctx.zero_pad_output(DNNL_ARG_DST);
 
-    if (!subbyte_pack) return status;
+    if (!subbyte_pack || status != status_t::dnnl_success) return status;
     compute::kernel_arg_list_t repack_arg_list;
     repack_arg_list.set(0, *tmp);
     repack_arg_list.set(1, c);
