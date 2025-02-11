@@ -439,8 +439,7 @@ status_t fold_mul_scales(std::shared_ptr<subgraph_t> &sg) {
             auto &consumer_op = consumers[0].get_op();
             if (consumer_op.get_kind() != op_kind::dnnl_mul_scales) continue;
 
-            folding_groups.emplace_back(
-                    std::pair<op_t *, op_t *> {cur_op.get(), &consumer_op});
+            folding_groups.emplace_back(cur_op.get(), &consumer_op);
             visited.insert(cur_op.get());
             visited.insert(&consumer_op);
         }
@@ -849,7 +848,7 @@ status_t fuse_post_ops(std::shared_ptr<subgraph_t> &sg) {
             if (not_fusible) { return status::success; }
 
             // push fusible pair to fuse group for later fusion
-            fuse_groups.emplace_back(std::pair<op_t *, op_t *> {op, &post_op});
+            fuse_groups.emplace_back(op, &post_op);
             visited.insert(op);
             visited.insert(&post_op);
             return status::success;
@@ -1208,8 +1207,7 @@ status_t fuse_dst_scales(std::shared_ptr<subgraph_t> &sg) {
         if (consumers.size() != 1) continue;
         auto &next_op = consumers[0].get_op();
         if (next_op.get_kind() != op_kind::dnnl_mul_scales) continue;
-        fuse_groups.emplace_back(
-                std::pair<op_t *, op_t *> {cur_op.get(), &next_op});
+        fuse_groups.emplace_back(cur_op.get(), &next_op);
         visited.insert(cur_op.get());
         visited.insert(&next_op);
     }
@@ -1861,8 +1859,7 @@ status_t fuse_typecast_to_matmul_or_conv(std::shared_ptr<subgraph_t> &sg) {
                         == op_kind::dnnl_mul_scales
                 && in1.get_input_value(0)->get_producer().get_kind()
                         == op_kind::dnnl_mul_scales)
-            fusion_groups.emplace_back(
-                    std::vector<op_t *> {cur_op.get(), &in0, &in1});
+            fusion_groups.emplace_back(cur_op.get(), &in0, &in1);
     }
 
     subgraph_rewriter_t rewriter(sg);
@@ -2582,7 +2579,7 @@ status_t fuse_adjacent_reorders(std::shared_ptr<subgraph_t> &sg) {
             }
 
             // push fusible pair to fuse group for later fusion
-            fuse_groups.emplace_back(std::pair<op_t *, op_t *> {op, &next_op});
+            fuse_groups.emplace_back(op, &next_op);
             visited.insert(op);
             visited.insert(&next_op);
             // destroy md before return
@@ -2752,8 +2749,7 @@ status_t fuse_typecast_to_mul_scales(std::shared_ptr<subgraph_t> &sg) {
             continue;
 
         auto &in = cur_op->get_input_value(0)->get_producer();
-        if (is_typecast(&in))
-            fusion_groups.emplace_back(std::vector<op_t *> {cur_op.get(), &in});
+        if (is_typecast(&in)) fusion_groups.emplace_back(cur_op.get(), &in);
     }
 
     subgraph_rewriter_t rewriter(sg);
@@ -2885,8 +2881,7 @@ status_t fuse_dynamic_mul_scales_add_zps(std::shared_ptr<subgraph_t> &sg) {
                 || !consumer_op.get_attr<bool>(op_attr::with_runtime_zps))
             continue;
 
-        fuse_groups.emplace_back(std::pair<op_ptr, op_ptr> {
-                cur_op, (&consumer_op)->shared_from_this()});
+        fuse_groups.emplace_back(cur_op, (&consumer_op)->shared_from_this());
         visited.insert(cur_op.get());
         visited.insert(&consumer_op);
     }
@@ -2962,8 +2957,7 @@ status_t fuse_dynamic_sub_zps_mul_scales(std::shared_ptr<subgraph_t> &sg) {
                 || !consumer_op.get_attr<bool>(op_attr::with_runtime_scales))
             continue;
 
-        fuse_groups.emplace_back(std::pair<op_ptr, op_ptr> {
-                cur_op, (&consumer_op)->shared_from_this()});
+        fuse_groups.emplace_back(cur_op, (&consumer_op)->shared_from_this());
         visited.insert(cur_op.get());
         visited.insert(&consumer_op);
     }
@@ -3582,8 +3576,7 @@ impl::status_t lift_up_typecast(std::shared_ptr<subgraph_t> &sg) {
                     || is_layout_reorder(producer);
             if (!ok) continue;
 
-            to_be_swapped.emplace_back(
-                    std::pair<op_t *, op_t *> {producer, op.get()});
+            to_be_swapped.emplace_back(producer, op.get());
         }
 
         if (to_be_swapped.empty()) break;
@@ -3620,8 +3613,7 @@ impl::status_t lift_up_quantize(std::shared_ptr<subgraph_t> &sg) {
                     || is_layout_reorder(producer);
             if (!ok) continue;
 
-            to_be_swapped.emplace_back(
-                    std::pair<op_t *, op_t *> {producer, op.get()});
+            to_be_swapped.emplace_back(producer, op.get());
         }
 
         if (to_be_swapped.empty()) break;
@@ -3962,9 +3954,7 @@ impl::status_t swap_relu_mul_scales(std::shared_ptr<subgraph_t> &sg) {
                     = producer->get_input_value(0)->get_producer();
             if (prv_op.get_kind() == op_kind::dnnl_batchnorm
                     && !prv_op.get_attr<bool>(op_attr::is_training)) {
-                to_be_swapped.emplace_back(
-                        std::pair<graph::op_t *, graph::op_t *> {
-                                producer, op.get()});
+                to_be_swapped.emplace_back(producer, op.get();
             } else {
                 continue;
             }
