@@ -280,7 +280,7 @@ public:
      * \param list of partitions
      */
     graph::status_t get_ordered_partitions(
-            std::vector<graph::partition_t *> &partitions);
+            std::vector<graph::partition_t *> &partitions) const;
 
     // Finalize the graph after finishing adding ops.
     graph::status_t finalize();
@@ -349,7 +349,7 @@ public:
     // NOLINTNEXTLINE(readability-make-member-function-const)
     graph::status_t set_user_inputs_outputs(
             const std::vector<graph::logical_tensor_t> &inputs,
-            const std::vector<graph::logical_tensor_t> &outputs) {
+            const std::vector<graph::logical_tensor_t> &outputs) const {
         // set the inputs's layout to subgraph's inputs value
         auto graph_in_vals = get_input_values();
         auto graph_out_vals = get_output_values();
