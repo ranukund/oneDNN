@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2024 Intel Corporation
+* Copyright 2017-2025 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -74,6 +74,13 @@ struct jit_uni_pooling_fwd_t : public primitive_t {
 
             CHECK(jit_uni_pool_kernel<isa>::init_conf(
                     jpp_, scratchpad, attr_, this));
+
+            dim_t src_size = static_cast<dim_t>(jpp_.mb) * jpp_.c * jpp_.id
+                    * jpp_.ih * jpp_.iw;
+
+            VDISPATCH_POOLING_IC(src_size <= INT_MAX,
+                    VERBOSE_UNSUPPORTED_FEATURE,
+                    "src size > INT_MAX is not supported");
 
             return status::success;
         }
