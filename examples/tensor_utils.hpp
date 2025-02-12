@@ -301,6 +301,12 @@ tensor read(const std::string &file_path) {
             data.push_back(key_to_value[key]);
         }
     }
+    if (data.size() < dims[0] * dims[1] * dims[2] * dims[3]) {
+      fprintf(stderr, "error: insufficient data within %s\n",
+              file_path.c_str());
+      exit(1);
+    }
+
     std::vector<float> transposed_data = transpose_vector(data, dims);
 
     memory::dims memory_dims(dims.begin(), dims.end());

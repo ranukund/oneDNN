@@ -34,21 +34,25 @@ using namespace dnnl::impl::types;
 
 status_t dnnl_micro_sdpa_primitive_desc_create(
         primitive_desc_iface_t **primitive_desc_iface, engine_t *engine,
-        const memory_desc_t *qry_desc, const memory_desc_t *key_desc,
-        const memory_desc_t *val_desc, const memory_desc_t *dst_desc,
-        const memory_desc_t *msk_desc, const memory_desc_t *idx_desc) {
+        const memory_desc_t *qry_desc, const memory_desc_t *key_cache_desc,
+        const memory_desc_t *val_cache_desc, const memory_desc_t *dst_desc,
+        const memory_desc_t *msk_desc, const memory_desc_t *prompt_lens_desc,
+        const memory_desc_t *subsequence_begins_desc,
+        const memory_desc_t *block_indices_desc,
+        const memory_desc_t *block_indices_begins_desc) {
 
     auto sdpa_desc = sdpa_desc_t();
     sdpa_desc.q_desc = *qry_desc;
-    sdpa_desc.k_desc = *key_desc;
-    sdpa_desc.v_desc = *val_desc;
+    sdpa_desc.k_desc = *key_cache_desc;
+    sdpa_desc.v_desc = *val_cache_desc;
     sdpa_desc.dst_desc = *dst_desc;
     sdpa_desc.attn_mask_desc = *msk_desc;
     sdpa_desc.kv_head_number = 1;
 
-    sdpa_desc.idx_desc = *idx_desc;
-    sdpa_desc.utilize_idx
-            = (sdpa_desc.idx_desc.data_type != dnnl_data_type_undef);
+    sdpa_desc.prompt_lens_desc = *prompt_lens_desc;
+    sdpa_desc.subsequence_begins_desc = *subsequence_begins_desc;
+    sdpa_desc.block_indices_desc = *block_indices_desc;
+    sdpa_desc.block_indices_begins_desc = *block_indices_begins_desc;
 
     sdpa_desc.primitive_kind = primitive_kind::sdpa;
     return primitive_desc_create(primitive_desc_iface, engine,

@@ -40,6 +40,11 @@ struct sdpa_desc_t : public op_desc_t {
     memory_desc_t k_desc {}; /* keys */
     memory_desc_t v_desc {}; /* values */
 
+    memory_desc_t prompt_lens_desc {};
+    memory_desc_t subsequence_begins_desc {};
+    memory_desc_t block_indices_desc {};
+    memory_desc_t block_indices_begins_desc {};
+
     // primitive_attr_t can't be used because of deleted copy-ctor, but desc_t
     // must be copyable.
     quant_entry_t kq_scales {};
@@ -59,10 +64,6 @@ struct sdpa_desc_t : public op_desc_t {
     // causal_mask = true: causal mask used. mask descriptor not used
     bool causal_mask {};
 
-    memory_desc_t idx_desc; /* indices for paged attention */
-    dim_t page_size; /* number of tokens in each page */
-    bool utilize_idx;
-
     // Number of queries.
     dnnl_dim_t queries() const { return q_desc.dims[q_desc.ndims - 2]; }
     // Head size.
@@ -71,6 +72,10 @@ struct sdpa_desc_t : public op_desc_t {
     dnnl_dim_t keys() const { return k_desc.dims[k_desc.ndims - 1]; }
     // Number of values.
     dnnl_dim_t values() const { return v_desc.dims[v_desc.ndims - 1]; }
+    // Number of subsequences.
+    dnnl_dim_t num_sequences() const {
+      return prompt_lens_desc.dims[prompt_lens_desc.ndims - 1];
+    }
     // Total batch size.
     dnnl_dim_t batch_size() const {
         dnnl_dim_t batch = 1;

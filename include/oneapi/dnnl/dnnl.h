@@ -2009,7 +2009,11 @@ dnnl_status_t DNNL_API dnnl_micro_sdpa_primitive_desc_create(
         dnnl_primitive_desc_t *primitive_desc, dnnl_engine_t engine,
         const_dnnl_memory_desc_t qry_desc, const_dnnl_memory_desc_t key_desc,
         const_dnnl_memory_desc_t val_desc, const_dnnl_memory_desc_t dst_desc,
-        const_dnnl_memory_desc_t msk_desc, const_dnnl_memory_desc_t idx_desc);
+        const_dnnl_memory_desc_t msk_desc,
+        const_dnnl_memory_desc_t prompt_lens_desc,
+        const_dnnl_memory_desc_t subsequence_begins_desc,
+        const_dnnl_memory_desc_t block_indices_desc,
+        const_dnnl_memory_desc_t block_indices_begins_desc);
 
 /// @addtogroup dnnl_api_pooling
 /// @{
