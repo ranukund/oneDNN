@@ -45,6 +45,17 @@ status_t sdp_primitive_kernel_t<quantized>::compile_impl(
         const dnnl_partition_impl_t *part, const engine_t *g_engine,
         const std::vector<logical_tensor_t> &inputs,
         const std::vector<logical_tensor_t> &outputs) {
+// sdp_primitive_kernel_t only supports Intel GPU.
+#ifdef DNNL_WITH_SYCL
+#if DNNL_GPU_VENDOR != DNNL_VENDOR_INTEL
+    UNUSED(part);
+    UNUSED(g_engine);
+    UNUSED(inputs);
+    UNUSED(outputs);
+    return status::unimplemented;
+#endif
+#endif
+
     p_engine_ = make_dnnl_engine(*g_engine);
     g_alloc_
             = reinterpret_cast<graph::allocator_t *>(g_engine->get_allocator());
@@ -235,7 +246,15 @@ status_t sdp_primitive_kernel_t<quantized>::sycl_execute_impl(
         const std::vector<tensor_t> &outputs,
         const std::vector<::sycl::event> &sycl_deps,
         ::sycl::event *sycl_event) {
-
+// sdp_primitive_kernel_t only supports Intel GPU.
+#if DNNL_GPU_VENDOR != DNNL_VENDOR_INTEL
+    UNUSED(g_stream);
+    UNUSED(inputs);
+    UNUSED(outputs);
+    UNUSED(sycl_deps);
+    UNUSED(sycl_event);
+    return status::unimplemented;
+#else
     dnnl::stream p_stream = make_dnnl_stream(p_engine_, *g_stream);
 
     thread_local_cache_t<execution_args_set_t> res_cache;
@@ -272,6 +291,7 @@ status_t sdp_primitive_kernel_t<quantized>::sycl_execute_impl(
     sycl_stream->after_exec_hook();
 
     return status;
+#endif
 }
 #endif
 
