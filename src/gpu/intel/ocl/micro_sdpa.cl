@@ -208,11 +208,29 @@ micro_sdpa(const global KEY_DATA_T *K, const global QRY_DATA_T *Q,
         ,
         const global MSK_DATA_T *msk
 #endif
+#if WITH_PAGED_ATTN
+        ,
+        const global INDEX_DATA_T *prompt_lens,
+        const global INDEX_DATA_T *subsequence_begins,
+        const global INDEX_DATA_T *block_indices,
+        const global INDEX_DATA_T *block_indices_begins
+#endif
 ) {
+
     uint sg_ij = sub_group_broadcast(get_local_id(1), 0);
     uint b0 = get_group_id(1);
     uint b1 = get_group_id(2);
     uint b0_kv = b0 / KV_GROUP_SIZE;
+
+    const uint subsequence_no = b0;
+    const uint start_query_no = subsequence_begins[subsequence_no];
+    const uint stop_query_no = subsequence_begins[subsequence_no + 1];
+    q = prompt_lens[subsequence_no];
+
+    const uint block_start_index = block_indices_begins[subsequence_no];
+    const uint block_stop_index = block_indices_begins[subsequence_no + 1];
+
+    const uint block_index = block_indices[block_start_index];
 
     uint wg_j0 = get_group_id(0) * ugemm_kq_wg_tile_n;
 
@@ -261,10 +279,14 @@ micro_sdpa(const global KEY_DATA_T *K, const global QRY_DATA_T *Q,
     const bool need_sum_barrier = (ugemm_vs_barrier_count == 0);
 
     /* Locate K/Q/V/A matrices within batch */
-    K += KEY_OFF(b1, b0_kv, 0, 0) / KEY_ELEMENTS_PER_BYTE;
-    Q += QRY_OFF(b1, b0, 0, 0);
-    V += VAL_OFF(b1, b0_kv, 0, 0) / VAL_ELEMENTS_PER_BYTE;
-    A += DST_OFF(b1, b0, 0, 0, 0);
+    // K += KEY_OFF(b1, b0_kv, 0, 0) / KEY_ELEMENTS_PER_BYTE;
+    K += KEY_OFF(block_index, 0, 0, 0) / KEY_ELEMENTS_PER_BYTE;
+    Q += QRY_OFF(0, 0, start_query_no, 0);
+    // Q += QRY_OFF(b1, b0, start_query_no, 0);
+    // V += VAL_OFF(b1, b0_kv, 0, 0) / VAL_ELEMENTS_PER_BYTE;
+    V += VAL_OFF(block_index, 0, 0, 0) / VAL_ELEMENTS_PER_BYTE;
+    // A += DST_OFF(b1, b0, 0, 0, 0);
+    A += DST_OFF(0, 0, 0, start_query_no, 0);
 #if WITH_ATTN_MASK
     uint ldmsk = MSK_S2;
     msk += MSK_OFF(b1 % MSK_D0, b0 % MSK_D1, 0, 0);
